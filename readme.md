@@ -1,6 +1,7 @@
 # Scratch benchmark POC — IOR / mdtest
 
-Purpose: establish a first, repeatable baseline for `/scratch` (GPFS, currently
+Purpose: establish a first, repeatable baseline for `/scratch/c1/cgaylord`
+(GPFS, currently
 TCP failover, no verbs) before formalizing this with Joe and Fong. Built to be
 run solo by Clark on log002, then handed off as a working artifact rather than
 a proposal.
@@ -85,13 +86,16 @@ for the `--dry-run` / R / Python / gnuplot path.
    openmpi/gcc/64/4.1.6` before running these, since a manually loaded
    module can shadow the vendor path. This is worth flagging to Glen/Joe
    independently — it's a gap in the module tree, not specific to this POC.
-2. Confirm `/scratch` is the intended target and has enough free space for a
-   ~16GB working set per node during the run (`df -h /scratch`).
+2. Confirm `/scratch/c1/cgaylord` is the intended target and has enough free
+   space for a ~16GB working set per node during the run
+   (`df -h /scratch/c1/cgaylord`). This is Clark's own scratch space, distinct
+   from CBI's scratch usage — no coordination needed there.
 3. Confirm with Joe/Glen informally that a short multi-node job on 4 nodes
    won't collide with anything sensitive — this is a courtesy heads-up, not
    a design review, since you're intentionally doing this solo first.
 4. Edit `SCRATCH_TEST_DIR` at the top of each `.sh` file if you want a
-   specific subdirectory rather than the default `/scratch/benchmark-poc`.
+   specific subdirectory rather than the default
+   `/scratch/c1/cgaylord/benchmark-poc`.
 
 ## Running
 

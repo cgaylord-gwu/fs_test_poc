@@ -33,7 +33,7 @@ elif ! command -v mpirun >/dev/null 2>&1; then
 fi
 
 export PATH="${HOME}/opt/ior/bin:${PATH}"
-SCRATCH_TEST_DIR="${SCRATCH_TEST_DIR:-/scratch/benchmark-poc}"
+SCRATCH_TEST_DIR="${SCRATCH_TEST_DIR:-/scratch/c1/cgaylord/benchmark-poc}"
 mkdir -p "${SCRATCH_TEST_DIR}"
 
 TS="$(date +%Y%m%d-%H%M%S)"
