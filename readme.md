@@ -11,13 +11,26 @@ a proposal.
 - `00_build.sh` — builds IOR and mdtest from source via pixi/conda-forge, no
   root needed. Skip if a module or existing binary is already available.
 - `01_ior_single_node.sh` — sequential write/read baseline, one node.
-- `02_ior_multi_node.sh` — same pattern, 4 nodes, to see aggregate/contention
-  behavior over TCP.
+- `02_ior_multi_node.sh` — 4 nodes, 4 tasks/node (16 total), to see aggregate
+  throughput/contention behavior over TCP. As of 2026-08 this explicitly
+  forces cross-node task placement with `--map-by node` and verifies it with
+  a logged `hostname` fan-out before the real test — earlier runs did not
+  force this, and it's possible (unconfirmed either way) that OpenMPI's
+  default mapping put all tasks on one node despite the 4-node allocation.
+  The script now warns loudly in its own output if placement doesn't match
+  expectations, so results are self-verifying going forward.
+- `05_ior_multi_node_1ppn.sh` — 4 nodes, 1 task/node (4 total). Isolates
+  genuine cross-node network/GPFS-client effects from the same-node
+  multi-task effects (shared local TCP stack, page cache) that are mixed
+  into `02`'s 16-task result. Compare this run's per-task bandwidth against
+  `01`'s per-task bandwidth (divide `01`'s aggregate by its task count) to
+  see whether cross-node placement alone changes per-task IO performance.
 - `03_mdtest_single_node.sh` — metadata create/stat/remove, small file count,
   sized to be safe against qumulo1 pressure (this hits GPFS scratch, not
   qumulo, but kept conservative regardless — see note below).
 - `04_run_all.sh` — convenience wrapper, submits 01-03 in sequence, waits,
-  collects results.
+  collects results. Does not currently include `05` — run that one
+  separately when you want the 1-task/node comparison.
 - `parse_results.py` — pulls the key numbers out of IOR/mdtest stdout into one
   CSV row per run, appends to `results.csv` so repeat runs build a timeseries.
 - `send_to_zabbix.py` — reads `results.csv` (does not re-parse raw output) and
@@ -117,6 +130,18 @@ python3 parse_results.py
 Results land in `results.csv` — one row per run, with timestamp, so this is
 safe to re-run monthly or after fabric/GPFS changes and get a trend line for
 free.
+
+**Note on existing data:** the `02_ior_multi_node` rows already in
+`results.csv` (job 73608640, run 2026-08-27) predate the forced
+`--map-by node` placement and hostname verification step added below.
+Checked independently via `sacct -j 73608640 --format=JobID,NodeList` —
+Slurm allocated 4 distinct nodes (`cpu[008-011]`), and OpenMPI's own
+`orted` remote-daemon steps show `cpu[009-011]` alongside the batch
+script's `cpu008`, confirming MPI ranks were not all confined to one
+node. This is reasonable evidence the original run was genuinely
+cross-node, though it doesn't confirm an even 4-tasks-per-node split
+across all four. Re-run with the current script for a self-verifying
+result that logs placement directly in its own output.
 
 ## What this intentionally does NOT do yet
 
