@@ -1,0 +1,82 @@
+=== IOR multi-node run: 20260827-121732 ===
+Nodes: 4, tasks: 16
+Target: /scratch/c1/cgaylord/benchmark-poc
+--- File-per-process, transfer size 1m ---
+IOR-4.0.0: MPI Coordinated Test of Parallel I/O
+Began               : Thu Aug 27 12:17:35 2026
+Command line        : ior -a POSIX -w -r -b 2g -t 1m -o /scratch/c1/cgaylord/benchmark-poc/ior_test_fpp -F -i 1 -e
+Machine             : Linux cpu008
+TestID              : 0
+StartTime           : Thu Aug 27 12:17:35 2026
+Path                : /scratch/c1/cgaylord/benchmark-poc/ior_test_fpp.00000000
+FS                  : 2041.4 TiB   Used FS: 78.1%   Inodes: 4482.3 Mi   Used Inodes: 12.5%
+
+Options: 
+api                 : POSIX
+apiVersion          : 
+test filename       : /scratch/c1/cgaylord/benchmark-poc/ior_test_fpp
+access              : file-per-process
+type                : independent
+segments            : 1
+ordering in a file  : sequential
+ordering inter file : no tasks offsets
+nodes               : 4
+tasks               : 16
+clients per node    : 4
+repetitions         : 1
+xfersize            : 1 MiB
+blocksize           : 2 GiB
+aggregate filesize  : 32 GiB
+
+Results: 
+
+access    bw(MiB/s)  IOPS       Latency(s)  block(KiB) xfer(KiB)  open(s)    wr/rd(s)   close(s)   total(s)   iter
+------    ---------  ----       ----------  ---------- ---------  --------   --------   --------   --------   ----
+write     2666.91    2668.02    0.005947    2097152    1024.00    0.090546   12.28      0.477039   12.29      0   
+read      4727       4727       0.003153    2097152    1024.00    0.000283   6.93       0.667518   6.93       0   
+
+Summary of all tests:
+Operation   Max(MiB)   Min(MiB)  Mean(MiB)     StdDev   Max(OPs)   Min(OPs)  Mean(OPs)     StdDev    Mean(s) Stonewall(s) Stonewall(MiB) Test# #Tasks tPN reps fPP reord reordoff reordrand seed segcnt   blksiz    xsize aggs(MiB)   API RefNum
+write        2666.91    2666.91    2666.91       0.00    2666.91    2666.91    2666.91       0.00   12.28689         NA            NA     0     16   4    1   1     0        1         0    0      1 2147483648  1048576   32768.0 POSIX      0
+read         4727.23    4727.23    4727.23       0.00    4727.23    4727.23    4727.23       0.00    6.93176         NA            NA     0     16   4    1   1     0        1         0    0      1 2147483648  1048576   32768.0 POSIX      0
+Finished            : Thu Aug 27 12:17:54 2026
+--- Shared file, transfer size 1m ---
+IOR-4.0.0: MPI Coordinated Test of Parallel I/O
+Began               : Thu Aug 27 12:17:55 2026
+Command line        : ior -a POSIX -w -r -b 2g -t 1m -o /scratch/c1/cgaylord/benchmark-poc/ior_test_shared -i 1 -e
+Machine             : Linux cpu008
+TestID              : 0
+StartTime           : Thu Aug 27 12:17:55 2026
+Path                : /scratch/c1/cgaylord/benchmark-poc/ior_test_shared
+FS                  : 2041.4 TiB   Used FS: 78.1%   Inodes: 4482.3 Mi   Used Inodes: 12.5%
+
+Options: 
+api                 : POSIX
+apiVersion          : 
+test filename       : /scratch/c1/cgaylord/benchmark-poc/ior_test_shared
+access              : single-shared-file
+type                : independent
+segments            : 1
+ordering in a file  : sequential
+ordering inter file : no tasks offsets
+nodes               : 4
+tasks               : 16
+clients per node    : 4
+repetitions         : 1
+xfersize            : 1 MiB
+blocksize           : 2 GiB
+aggregate filesize  : 32 GiB
+
+Results: 
+
+access    bw(MiB/s)  IOPS       Latency(s)  block(KiB) xfer(KiB)  open(s)    wr/rd(s)   close(s)   total(s)   iter
+------    ---------  ----       ----------  ---------- ---------  --------   --------   --------   --------   ----
+write     2633.16    2633.43    0.006073    2097152    1024.00    0.059204   12.44      0.005571   12.44      0   
+read      4306       4475       0.002912    2097152    1024.00    0.000487   7.32       1.65       7.61       0   
+
+Summary of all tests:
+Operation   Max(MiB)   Min(MiB)  Mean(MiB)     StdDev   Max(OPs)   Min(OPs)  Mean(OPs)     StdDev    Mean(s) Stonewall(s) Stonewall(MiB) Test# #Tasks tPN reps fPP reord reordoff reordrand seed segcnt   blksiz    xsize aggs(MiB)   API RefNum
+write        2633.16    2633.16    2633.16       0.00    2633.16    2633.16    2633.16       0.00   12.44439         NA            NA     0     16   4    1   0     0        1         0    0      1 2147483648  1048576   32768.0 POSIX      0
+read         4306.17    4306.17    4306.17       0.00    4306.17    4306.17    4306.17       0.00    7.60956         NA            NA     0     16   4    1   0     0        1         0    0      1 2147483648  1048576   32768.0 POSIX      0
+Finished            : Thu Aug 27 12:18:15 2026
+Done. Output: ior_multi_node_20260827-121732.txt

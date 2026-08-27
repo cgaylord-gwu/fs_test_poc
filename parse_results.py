@@ -102,8 +102,14 @@ def parse_ior_file(path):
         labeled_bodies = [("run", text)]
 
     for label, body in labeled_bodies:
-        # IOR "Results:" table has a header line with Max(MiB) Min(MiB) Mean(MiB) ...
-        # and then data rows starting with "write" or "read"
+        # IOR 4.x output has TWO tables per test that both have lines
+        # starting with "write"/"read": the per-test "Results:" table
+        # (columns: access bw(MiB/s) IOPS Latency(s) ...) and the
+        # "Summary of all tests:" table (columns: Operation Max(MiB)
+        # Min(MiB) Mean(MiB) ...). We want only the summary table. Scanning
+        # the whole body for write/read lines matches both and misreads
+        # columns from the wrong table -- so only look at lines *after*
+        # the Operation/Max(MiB) header, not the full section body.
         header_match = re.search(r"^Operation\s+Max\(MiB\).*$", body, flags=re.MULTILINE)
         if not header_match:
             continue
@@ -114,7 +120,8 @@ def parse_ior_file(path):
         except ValueError:
             continue
 
-        for line in body.splitlines():
+        body_after_header = body[header_match.end():]
+        for line in body_after_header.splitlines():
             line = line.strip()
             if line.startswith("write") or line.startswith("read"):
                 parts = line.split()
@@ -139,9 +146,13 @@ def parse_ior_file(path):
 
 def parse_mdtest_file(path):
     """
-    mdtest summary lines look like:
-    File creation     :  12345.678  12000.000  11000.000  ...
-    Columns are: Operation, Max, Min, Mean, Std Dev (ops/sec)
+    mdtest-4.0.0 SUMMARY rate lines look like (no colon, whitespace-separated):
+       File creation                7000.398       7000.398       7000.398          0.000
+       File stat                  153875.650     153875.650     153875.650          0.000
+    Older mdtest versions used a colon separator:
+       File creation     :  12345.678  12000.000  11000.000  ...
+    Columns are: Operation, Max, Min, Mean, Std Dev (ops/sec). Handle both
+    by making the colon optional.
     """
     rows = []
     with open(path, errors="replace") as f:
@@ -150,7 +161,7 @@ def parse_mdtest_file(path):
     pattern = re.compile(
         r"^\s*(File creation|File stat|File read|File removal|"
         r"Directory creation|Directory stat|Directory removal|Tree creation|Tree removal)"
-        r"\s*:\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)",
+        r"\s*:?\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)",
         flags=re.MULTILINE,
     )
     for m in pattern.finditer(text):
@@ -169,13 +180,33 @@ def parse_mdtest_file(path):
 def get_nodes_tasks(text):
     nodes = ""
     tasks = ""
+    # 02_ior_multi_node.sh's own echo line: "Nodes: 4, tasks: 16"
     m = re.search(r"Nodes:\s*(\d+),\s*tasks:\s*(\d+)", text)
     if m:
         nodes, tasks = m.groups()
-    else:
-        m = re.search(r"clients\s*=\s*(\d+)", text)
-        if m:
-            tasks = m.group(1)
+        return nodes, tasks
+
+    # mdtest-4.0.0's own launch banner: "mdtest-4.0.0 was launched with
+    # 4 total task(s) on 1 node(s)"
+    m = re.search(r"was launched with (\d+) total task\(s\) on (\d+) node\(s\)", text)
+    if m:
+        tasks, nodes = m.groups()
+        return nodes, tasks
+
+    # IOR-4.0.0's own "Options:" block reports nodes/tasks directly, e.g.:
+    #   nodes               : 1
+    #   tasks               : 4
+    m_nodes = re.search(r"^nodes\s*:\s*(\d+)", text, flags=re.MULTILINE)
+    m_tasks = re.search(r"^tasks\s*:\s*(\d+)", text, flags=re.MULTILINE)
+    if m_nodes or m_tasks:
+        nodes = m_nodes.group(1) if m_nodes else ""
+        tasks = m_tasks.group(1) if m_tasks else ""
+        return nodes, tasks
+
+    # Older mdtest versions: "clients = N"
+    m = re.search(r"clients\s*=\s*(\d+)", text)
+    if m:
+        tasks = m.group(1)
     return nodes, tasks
 
 
