@@ -12,15 +12,17 @@
 
 set -euo pipefail
 
-# MPI setup: see 01_ior_single_node.slurm for why this points at the
+# MPI setup: see 01_ior_single_node.sh for why this points at the
 # vendor OpenMPI instead of the module tree (openmpi/gcc/64/4.1.6 is
-# missing libpmix cluster-wide).
+# missing libpmix cluster-wide), and why --bind-to none is passed on
+# every mpirun call below (this vendor build's hwloc CPU-binding fails
+# outright under Slurm's cgroup-restricted CPU sets).
 #
 # Multi-node caveat: this vendor install isn't the module tree's usual
 # OpenMPI, so its Slurm/PMI integration for launching across nodes hasn't
 # been verified here the way single-node was. If this job hangs at
 # startup or processes don't land on all nodes, that's the first thing to
-# suspect -- worth running 01_ior_single_node.slurm successfully first as
+# suspect -- worth running 01_ior_single_node.sh successfully first as
 # a sanity check before this one.
 VENDOR_MPI_PREFIX="/usr/mpi/gcc/openmpi-4.1.7a1"
 if [ -x "${VENDOR_MPI_PREFIX}/bin/mpirun" ]; then
@@ -49,7 +51,7 @@ echo "Target: ${SCRATCH_TEST_DIR}" | tee -a "${OUTFILE}"
 # most clearly.
 
 echo "--- File-per-process, transfer size 1m ---" | tee -a "${OUTFILE}"
-mpirun -np "${NTASKS}" ior \
+mpirun -np "${NTASKS}" --bind-to none ior \
   -a POSIX \
   -w -r \
   -b 2g \
@@ -61,7 +63,7 @@ mpirun -np "${NTASKS}" ior \
   2>&1 | tee -a "${OUTFILE}"
 
 echo "--- Shared file, transfer size 1m ---" | tee -a "${OUTFILE}"
-mpirun -np "${NTASKS}" ior \
+mpirun -np "${NTASKS}" --bind-to none ior \
   -a POSIX \
   -w -r \
   -b 2g \
@@ -74,4 +76,3 @@ mpirun -np "${NTASKS}" ior \
 rm -f "${SCRATCH_TEST_DIR}"/ior_test_fpp* "${SCRATCH_TEST_DIR}"/ior_test_shared*
 
 echo "Done. Output: ${OUTFILE}"
-

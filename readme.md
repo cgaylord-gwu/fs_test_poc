@@ -86,6 +86,14 @@ for the `--dry-run` / R / Python / gnuplot path.
    openmpi/gcc/64/4.1.6` before running these, since a manually loaded
    module can shadow the vendor path. This is worth flagging to Glen/Joe
    independently — it's a gap in the module tree, not specific to this POC.
+
+   Also as of 2026-08: this vendor build's hwloc CPU-binding logic fails
+   outright under Slurm's cgroup-restricted CPU sets
+   (`hwloc_set_cpubind returned "Error"`), killing every rank before the
+   app starts. All `mpirun` calls in the `.sh` files pass `--bind-to none`
+   to work around this — safe for an I/O benchmark since the bottleneck is
+   the filesystem, not CPU cache locality, so unlike a compute-bound MPI
+   code, disabling binding here doesn't affect what's being measured.
 2. Confirm `/scratch/c1/cgaylord` is the intended target and has enough free
    space for a ~16GB working set per node during the run
    (`df -h /scratch/c1/cgaylord`). This is Clark's own scratch space, distinct

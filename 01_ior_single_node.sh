@@ -16,6 +16,14 @@ set -euo pipefail
 # /usr/mpi/gcc/openmpi-4.1.7a1 is a working vendor/OFED-provided install
 # confirmed present in the same location on log002 and compute nodes
 # (cpu009), with a real libpmix.so.2 bundled. Use it directly.
+#
+# All mpirun calls below add --bind-to none: this vendor build's hwloc
+# CPU-binding logic fails outright under Slurm's cgroup-restricted CPU
+# sets ("hwloc_set_cpubind returned Error"), killing every rank before
+# the app even starts. Binding matters for compute-bound MPI codes;
+# for an I/O benchmark like IOR/mdtest the bottleneck is the filesystem,
+# not cache locality, so disabling it is a safe fix rather than a
+# performance-relevant compromise.
 VENDOR_MPI_PREFIX="/usr/mpi/gcc/openmpi-4.1.7a1"
 if [ -x "${VENDOR_MPI_PREFIX}/bin/mpirun" ]; then
   export PATH="${VENDOR_MPI_PREFIX}/bin:${PATH}"
@@ -38,7 +46,7 @@ echo "Target: ${SCRATCH_TEST_DIR}"        | tee -a "${OUTFILE}"
 
 # 1MB transfer size, 4GB per process (4 tasks = 16GB working set)
 echo "--- Block size 1m, transfer size 1m ---" | tee -a "${OUTFILE}"
-mpirun -np "${SLURM_NTASKS}" ior \
+mpirun -np "${SLURM_NTASKS}" --bind-to none ior \
   -a POSIX \
   -w -r \
   -b 4g \
@@ -51,7 +59,7 @@ mpirun -np "${SLURM_NTASKS}" ior \
 
 # 4MB transfer size, same working set
 echo "--- Block size 1m, transfer size 4m ---" | tee -a "${OUTFILE}"
-mpirun -np "${SLURM_NTASKS}" ior \
+mpirun -np "${SLURM_NTASKS}" --bind-to none ior \
   -a POSIX \
   -w -r \
   -b 4g \

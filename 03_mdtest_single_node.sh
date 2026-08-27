@@ -13,9 +13,11 @@
 
 set -euo pipefail
 
-# MPI setup: see 01_ior_single_node.slurm for why this points at the
+# MPI setup: see 01_ior_single_node.sh for why this points at the
 # vendor OpenMPI instead of the module tree (openmpi/gcc/64/4.1.6 is
-# missing libpmix cluster-wide).
+# missing libpmix cluster-wide), and why --bind-to none is passed on
+# the mpirun call below (this vendor build's hwloc CPU-binding fails
+# outright under Slurm's cgroup-restricted CPU sets).
 VENDOR_MPI_PREFIX="/usr/mpi/gcc/openmpi-4.1.7a1"
 if [ -x "${VENDOR_MPI_PREFIX}/bin/mpirun" ]; then
   export PATH="${VENDOR_MPI_PREFIX}/bin:${PATH}"
@@ -39,7 +41,7 @@ echo "Target: ${SCRATCH_TEST_DIR}/mdtest" | tee -a "${OUTFILE}"
 # -n 1000: 1000 files per task (4 tasks = 4000 files total)
 # -z 0 -b 1: flat directory, no tree depth — keep the first pass simple
 # -u: unique working dir per task, avoids cross-task interference
-mpirun -np "${SLURM_NTASKS}" mdtest \
+mpirun -np "${SLURM_NTASKS}" --bind-to none mdtest \
   -n 1000 \
   -z 0 \
   -b 1 \
