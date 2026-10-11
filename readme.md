@@ -1,10 +1,7 @@
 # Scratch benchmark POC — IOR / mdtest
 
 Purpose: establish a first, repeatable baseline for `/scratch/c1/cgaylord`
-(GPFS, currently
-TCP failover, no verbs) before formalizing this with Joe and Fong. Built to be
-run solo by Clark on log002, then handed off as a working artifact rather than
-a proposal.
+(GPFS, currently TCP failover, no verbs).
 
 ## Layout
 
